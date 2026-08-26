@@ -128,13 +128,15 @@
   /* 首页 / 规则 — 与游戏页一致的作战室风 */
   .panel.lite{position:relative; background:linear-gradient(180deg, rgba(10,40,28,.5), rgba(4,20,13,.55)); box-shadow:none;}
   .panel.lite::before,.panel.lite::after{display:none;}
+  /* 首页两个大选项居中 */
+  #home{min-height:62vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 16px;}
   .help-btn{position:absolute; top:14px; right:14px; width:34px; height:34px; border:1px solid var(--radar); border-radius:50%; background:rgba(43,255,158,.06); color:var(--radar); font-size:17px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 0 10px rgba(43,255,158,.2); transition:all .15s; font-family:inherit;}
   .help-btn:hover{background:rgba(43,255,158,.16); box-shadow:0 0 18px rgba(43,255,158,.4);}
-  .mode-stack{display:flex; flex-direction:column; gap:14px; max-width:440px; margin:4px auto 0;}
-  .mode-row{display:flex; align-items:center; gap:16px; border:1px solid var(--line-2); border-radius:4px; padding:18px 22px; cursor:pointer; background:rgba(43,255,158,.04); transition:all .15s;}
+  .mode-stack{display:flex; flex-direction:column; gap:18px; max-width:460px; margin:0 auto;}
+  .mode-row{display:flex; flex-direction:column; align-items:center; gap:12px; border:1px solid var(--line-2); border-radius:4px; padding:28px 22px; cursor:pointer; background:rgba(43,255,158,.04); transition:all .15s; width:100%;}
   .mode-row:hover{border-color:var(--radar); background:rgba(43,255,158,.10); box-shadow:0 0 22px rgba(43,255,158,.18);}
-  .mode-row .mc-ico{font-size:26px; color:var(--radar); display:block; text-shadow:0 0 12px rgba(43,255,158,.4);}
-  .mode-row .mc-title{font-size:16px; font-weight:800; letter-spacing:3px; color:var(--ink);}
+  .mode-row .mc-ico{font-size:38px; color:var(--radar); display:block; text-shadow:0 0 14px rgba(43,255,158,.45);}
+  .mode-row .mc-title{font-size:24px; font-weight:800; letter-spacing:6px; color:var(--ink); text-align:center;}
   .rules-list{display:flex; flex-direction:column; gap:16px; max-width:640px; margin:8px auto 16px;}
   .rule-item{display:flex; gap:14px; align-items:flex-start;}
   .rule-num{flex:none; width:28px; height:28px; border:1px solid var(--radar); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--radar); font-size:13px; font-weight:800; box-shadow:0 0 10px rgba(43,255,158,.2);}
@@ -189,7 +191,6 @@
           <button class="dir-btn" data-dir="1" title="机头朝右">→</button>
           <button class="dir-btn" data-dir="2" title="机头朝下">↓</button>
           <button class="dir-btn" data-dir="3" title="机头朝左">←</button>
-          <span class="dir-label" id="dirLabel">机头方向：上</span>
         </div>
         <div class="controls" style="margin-top:10px;">
           <button id="randomBtn" class="ghost">⟳ 随机布阵</button>
@@ -199,15 +200,6 @@
         <div class="controls">
           <button id="confirmBtn" disabled>确认布置 →</button>
           <button id="backHomeBtn" class="ghost">← 重选模式</button>
-        </div>
-      </div>
-      <div class="col">
-        <div class="board-title">布置说明</div>
-        <div class="legend" style="flex-direction:column; gap:8px; color:var(--ink);">
-          <div>① 用 <b>方向键</b> 选择机头朝向，鼠标点击棋盘落子（机翼中点为锚点）。</div>
-          <div>② 或点 <b>随机布阵</b> 一键完成三架布置；点 <b>清空</b> 重来。</div>
-          <div>③ 三架布置完成点 <b>确认布置</b>；双人对战需双方各自布置。</div>
-          <div style="color:var(--muted);">棋盘坐标：列 A–I（左→右），行 1–9（上→下）。例如 C4 = 第 C 列第 4 行。</div>
         </div>
       </div>
     </div>
@@ -222,15 +214,8 @@
         <div id="ownBoard" class="grid"></div>
       </div>
       <div class="col">
-        <div class="board-title"><span id="enemyTitle">攻击敌方</span><span class="tag">点击格子报坐标</span></div>
+        <div class="board-title"><span id="enemyTitle">攻击敌方</span></div>
         <div id="enemyBoard" class="grid"></div>
-        <div class="legend">
-          <span><i class="dot" style="background:var(--cell)"></i>未知（水域）</span>
-          <span><i class="dot" style="background:var(--miss-bg)"></i>· 坑</span>
-          <span><i class="dot" style="background:var(--fire-bg)"></i>⊕ 中弹</span>
-          <span><i class="dot" style="background:var(--boom-bg)"></i>✸ 击落</span>
-          <span><i class="dot" style="background:var(--empty-bg)"></i>× 空(已毁机残格)</span>
-        </div>
       </div>
     </div>
     <div class="row" style="margin-top:14px;">
@@ -479,7 +464,7 @@ function renderSetup(){
   const wrap = $('setupBoardWrap');
   buildGrid(wrap, (r,c)=>placeManual(r,c), {clickable:true, hoverPreview:true});
   paintFleet(wrap, players[setupPlayer]);
-  $('placeHint').textContent = `已布置 ${placedCount}/3 架${placedCount<3?'（点击棋盘放置下一架，或点“随机布置”一键完成）':''}`;
+  const ph=$('placeHint'); if(ph) ph.textContent='';
   $('confirmBtn').disabled = placedCount<3;
 }
 
@@ -619,7 +604,7 @@ function randomSetup(){
 }
 function setDir(rot){
   manualRot = rot;
-  $('dirLabel').textContent = '机头方向：' + (rot===0?'上':rot===1?'右':rot===2?'下':'左');
+  const dl=$('dirLabel'); if(dl) dl.textContent = '机头方向：' + (rot===0?'上':rot===1?'右':rot===2?'下':'左');
   updateDirButtons();
   if(hoverRC) onPreview(hoverRC.r, hoverRC.c);
 }
@@ -642,7 +627,7 @@ function confirmSetup(){
     if(setupPlayer===0){
       showOverlay('Player 1 布置完成', '请将设备交给 Player 2 进行布置。', ()=>{
         setupPlayer=1; placedCount=0; manualRot=0;
-        $('setupInfo').textContent='当前：Player 2 布置舰队';
+        const si2=$('setupInfo'); if(si2) si2.textContent='Player 2';
         setDir(0);
         $('confirmBtn').classList.remove('hidden');
         renderSetup();
@@ -687,7 +672,7 @@ function gotoSetup(){
   players=[newPlayer('Player 1'), newPlayer('Player 2')];
   setupPlayer=0; placedCount=0; manualRot=0;
   $('modeBadge').textContent = mode==='pvp'?'双人对战':'人机对战';
-  $('setupInfo').textContent = mode==='pvp'?'当前：Player 1 布置舰队':'当前：你的舰队布置（电脑随机）';
+  const si=$('setupInfo'); if(si) si.textContent = mode==='pvp'?'Player 1':'你的舰队';
   setDir(0);
   $('confirmBtn').classList.remove('hidden');
   renderSetup();
@@ -695,8 +680,8 @@ function gotoSetup(){
 }
 
 // 首页 / 规则页（帮助）导航
-$('pvpCard').addEventListener('click', ()=>{ selectedMode='pvp'; gotoRules(); });
-$('pveCard').addEventListener('click', ()=>{ selectedMode='pve'; gotoRules(); });
+$('pvpCard').addEventListener('click', ()=>{ selectedMode='pvp'; gotoSetup(); });
+$('pveCard').addEventListener('click', ()=>{ selectedMode='pve'; gotoSetup(); });
 $('helpBtn').addEventListener('click', ()=>{ gotoRules(); });
 $('rulesBackBtn').addEventListener('click', ()=>{ showStep('home'); });
 $('rulesStartBtn').addEventListener('click', ()=>{ gotoSetup(); });
