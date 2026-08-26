@@ -125,6 +125,24 @@
   .hidden{display:none !important;}
   .score{font-size:14px; font-weight:600; letter-spacing:.5px;}
   .score b{font-size:18px; color:var(--radar);}
+  /* 首页 / 规则 — 简洁风（去重装饰、留白克制） */
+  .panel.lite{background:linear-gradient(180deg, rgba(10,40,28,.5), rgba(4,20,13,.55)); box-shadow:none;}
+  .panel.lite::before,.panel.lite::after{display:none;}
+  .home-center{text-align:center; margin-top:8px;}
+  .mode-cards{display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin:6px 0 2px;}
+  .mode-card{flex:1 1 300px; max-width:360px; border:1px solid var(--line-2); border-radius:4px; padding:24px 20px; cursor:pointer; background:rgba(43,255,158,.04); transition:all .15s; text-align:center;}
+  .mode-card:hover{border-color:var(--radar); background:rgba(43,255,158,.10); box-shadow:0 0 22px rgba(43,255,158,.18); transform:translateY(-2px);}
+  .mode-card .mc-ico{font-size:32px; color:var(--radar); display:block; margin-bottom:10px; text-shadow:0 0 12px rgba(43,255,158,.4);}
+  .mode-card .mc-title{font-size:16px; font-weight:800; letter-spacing:3px; color:var(--ink);}
+  .mode-card .mc-desc{font-size:12.5px; color:var(--muted); margin-top:10px; line-height:1.7; letter-spacing:.3px;}
+  .link-btn{background:none; border:none; color:var(--radar); cursor:pointer; font-family:inherit; font-size:13px; letter-spacing:1px; text-decoration:underline; text-underline-offset:3px; padding:6px; margin-top:4px;}
+  .link-btn:hover{color:#eafff5;}
+  .rules-list{display:flex; flex-direction:column; gap:16px; max-width:640px; margin:8px auto 16px;}
+  .rule-item{display:flex; gap:14px; align-items:flex-start;}
+  .rule-num{flex:none; width:28px; height:28px; border:1px solid var(--radar); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--radar); font-size:13px; font-weight:800; box-shadow:0 0 10px rgba(43,255,158,.2);}
+  .rule-text{font-size:14px; line-height:1.8; color:var(--ink); letter-spacing:.3px;}
+  .rule-text b{color:var(--radar);}
+  .center-actions{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
 </style>
 </head>
 <body>
@@ -132,17 +150,47 @@
   <h1><span class="radar-ico">◎</span>飞机大战<span class="en">AIR BATTLE GRID</span></h1>
   <div class="sub">三架飞机藏在棋盘里：头 1 · 翼 5 · 身 1 · 尾 3。轮流报坐标打击，先击落对方三架者胜。</div>
 
+  <!-- 首页 -->
+  <section id="home" class="panel lite">
+    <div class="board-title">作战指挥 · 选择模式</div>
+    <div class="mode-cards">
+      <div class="mode-card" id="pvpCard">
+        <span class="mc-ico">⚔</span>
+        <div class="mc-title">双人对战</div>
+        <div class="mc-desc">同设备轮流操作，两名指挥官各自隐藏舰队、依次报坐标打击。</div>
+      </div>
+      <div class="mode-card" id="pveCard">
+        <span class="mc-ico">☣</span>
+        <div class="mc-title">人机对战</div>
+        <div class="mc-desc">你 vs 电脑 AI。你布置舰队，电脑自动布阵并还击。</div>
+      </div>
+    </div>
+    <div class="home-center">
+      <button class="link-btn" id="toRulesBtn">查看游戏规则 →</button>
+    </div>
+  </section>
+
+  <!-- 规则页 -->
+  <section id="rules" class="panel lite hidden">
+    <div class="board-title">游戏规则</div>
+    <div class="rules-list">
+      <div class="rule-item"><div class="rule-num">1</div><div class="rule-text">每方在 9×9 棋盘（列 A–I、行 1–9）中隐藏 <b>三架飞机</b>，每架 10 格：机头 1 · 机翼 5 · 机身 1 · 机尾 3。</div></div>
+      <div class="rule-item"><div class="rule-num">2</div><div class="rule-text">轮流报坐标打击。<b>命中机头 ✸</b> 整架爆炸，此后打其翼/身/尾均记为“空”(×)；<b>命中翼/身/尾 ⊕</b> 中弹；<b>打中水域</b> 炸出坑 ·。</div></div>
+      <div class="rule-item"><div class="rule-num">3</div><div class="rule-text">先击落对方 <b>三架飞机</b> 的一方获胜。坐标示例：<b>C4</b> = 第 C 列第 4 行。</div></div>
+    </div>
+    <div class="setup-info" id="rulesModeHint" style="text-align:center;"></div>
+    <div class="center-actions">
+      <button class="ghost" id="rulesBackBtn">← 返回</button>
+      <button id="rulesStartBtn">开始布置 ▸</button>
+    </div>
+  </section>
+
   <!-- 设置区 -->
   <div id="setup" class="panel">
-    <div class="board-title">游戏设置</div>
+    <div class="board-title">游戏设置 <span class="tag"><span class="badge" id="modeBadge">双人对战</span></span></div>
     <div class="row">
       <div class="col">
-        <label class="setup-info">对战模式</label>
-        <select id="modeSel">
-          <option value="pvp">双人对战（同设备轮流）</option>
-          <option value="pve">人机对战（你 vs 电脑）</option>
-        </select>
-        <div id="setupInfo" class="setup-info" style="margin-top:12px;"></div>
+        <div id="setupInfo" class="setup-info"></div>
         <div id="setupBoardWrap" class="grid" style="margin-top:10px;"></div>
         <div class="setup-dirs">
           <button class="dir-btn active" data-dir="0" title="机头朝上">↑</button>
@@ -158,15 +206,15 @@
         <div class="setup-info" id="placeHint" style="margin-top:8px;"></div>
         <div class="controls">
           <button id="confirmBtn" disabled>确认布置 →</button>
-          <button id="startBtn" class="hidden">开始作战 ▸</button>
+          <button id="backHomeBtn" class="ghost">← 重选模式</button>
         </div>
       </div>
       <div class="col">
-        <div class="board-title">规则 & 判定</div>
+        <div class="board-title">布置说明</div>
         <div class="legend" style="flex-direction:column; gap:8px; color:var(--ink);">
-          <div>① 打中 <b>机头</b>：飞机爆炸 ✸，之后打其翼/身/尾均标记为“空”(×)，不再中弹。</div>
-          <div>② 打中 <b>翼/身/尾</b>：中弹 ⊕。</div>
-          <div>③ 打中 <b>其他水域</b>：炸出一个坑 ·（空白）。</div>
+          <div>① 用 <b>方向键</b> 选择机头朝向，鼠标点击棋盘落子（机翼中点为锚点）。</div>
+          <div>② 或点 <b>随机布阵</b> 一键完成三架布置；点 <b>清空</b> 重来。</div>
+          <div>③ 三架布置完成点 <b>确认布置</b>；双人对战需双方各自布置。</div>
           <div style="color:var(--muted);">棋盘坐标：列 A–I（左→右），行 1–9（上→下）。例如 C4 = 第 C 列第 4 行。</div>
         </div>
       </div>
@@ -260,6 +308,8 @@ function rnd(n){ return Math.floor(Math.random()*n); }
 
 /* ===================== 游戏状态 ===================== */
 let mode = 'pvp';
+let selectedMode = 'pvp';
+let step = 'home';
 let players = [];          // [{name, fleet, tracking, planes:[{destroyed,cells}], destroyedCount}]
 let turn = 0;              // 当前攻击方（pvp 用）
 let gameOver = false;
@@ -567,13 +617,13 @@ function placeManual(r,c){
 }
 function clearSetup(){
   players[setupPlayer].fleet=emptyGrid(); players[setupPlayer].planes=[]; placedCount=0;
-  $('confirmBtn').classList.remove('hidden'); $('startBtn').classList.add('hidden');
+  $('confirmBtn').classList.remove('hidden');
   renderSetup();
 }
 function randomSetup(){
   randomPlace(players[setupPlayer]); placedCount=3;
   renderSetup();
-  $('confirmBtn').classList.remove('hidden'); $('startBtn').classList.add('hidden');
+  $('confirmBtn').classList.remove('hidden');
 }
 function setDir(rot){
   manualRot = rot;
@@ -602,7 +652,7 @@ function confirmSetup(){
         setupPlayer=1; placedCount=0; manualRot=0;
         $('setupInfo').textContent='当前：Player 2 布置舰队';
         setDir(0);
-        $('confirmBtn').classList.remove('hidden'); $('startBtn').classList.add('hidden');
+        $('confirmBtn').classList.remove('hidden');
         renderSetup();
       });
     } else {
@@ -617,8 +667,7 @@ function confirmSetup(){
 
 /* ===================== 启动 ===================== */
 function startBattle(){
-  $('setup').classList.add('hidden');
-  $('battle').classList.remove('hidden');
+  showStep('battle');
   if(mode==='pvp'){
     turn=0; setStatus('轮到 '+players[0].name+' 攻击');
     logSys('对战开始：Player 1 vs Player 2，三架飞机各就各位。');
@@ -629,22 +678,39 @@ function startBattle(){
   renderBattle();
 }
 
-$('modeSel').addEventListener('change',e=>{
-  mode=e.target.value;
-  $('setupInfo').textContent = mode==='pvp'?'当前：Player 1 布置舰队':'当前：你的舰队布置（电脑随机）';
-  // 重置
+/* ===================== 页面导航 ===================== */
+function showStep(name){
+  step = name;
+  ['home','rules','setup','battle'].forEach(s=>{
+    const el=$(s); if(el) el.classList.toggle('hidden', s!==name);
+  });
+}
+function gotoRules(){
+  $('rulesModeHint').textContent = '已选模式：' + (selectedMode==='pvp'?'双人对战':'人机对战');
+  showStep('rules');
+}
+function gotoSetup(){
+  mode = selectedMode;
   players=[newPlayer('Player 1'), newPlayer('Player 2')];
   setupPlayer=0; placedCount=0; manualRot=0;
+  $('modeBadge').textContent = mode==='pvp'?'双人对战':'人机对战';
+  $('setupInfo').textContent = mode==='pvp'?'当前：Player 1 布置舰队':'当前：你的舰队布置（电脑随机）';
   setDir(0);
-  $('confirmBtn').classList.remove('hidden'); $('startBtn').classList.add('hidden');
+  $('confirmBtn').classList.remove('hidden');
   renderSetup();
-});
+  showStep('setup');
+}
 
-// 初始化
-players=[newPlayer('Player 1'), newPlayer('Player 2')];
-$('setupInfo').textContent='当前：Player 1 布置舰队';
-setDir(0);
-renderSetup();
+// 首页 / 规则页 导航
+$('pvpCard').addEventListener('click', ()=>{ selectedMode='pvp'; gotoRules(); });
+$('pveCard').addEventListener('click', ()=>{ selectedMode='pve'; gotoRules(); });
+$('toRulesBtn').addEventListener('click', ()=>{ gotoRules(); });
+$('rulesBackBtn').addEventListener('click', ()=>{ showStep('home'); });
+$('rulesStartBtn').addEventListener('click', ()=>{ gotoSetup(); });
+$('backHomeBtn').addEventListener('click', ()=>{ showStep('home'); });
+
+// 初始化：进入首页
+showStep('home');
 </script>
 </body>
 </html>
