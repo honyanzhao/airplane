@@ -60,9 +60,9 @@
         rgba(43,255,158,.06) 62% 63%, transparent 63%),
       var(--scope);
   }
-  /* 雷达扫描：30° 扇形 + 明暗过渡（前沿亮、向后渐隐；圆形、三盘一致；所有模式通用） */
+  /* 雷达扫描：30° 扇形 + 明暗过渡；扫描圆精确对齐并覆盖 9×9 格子区（圆心=格区中心，直径=格区边长 330px）。inset 四值=上37 右10 下10 左37（标签24+gap3+padding10=37 偏移；右/下仅 padding10） */
   .grid::before{
-    content:""; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:50%;
+    content:""; position:absolute; inset:37px 10px 10px 37px; z-index:0; pointer-events:none; border-radius:50%;
     background:conic-gradient(from 0deg,
       rgba(43,255,158,0) 0deg,
       rgba(43,255,158,.12) 16deg,
