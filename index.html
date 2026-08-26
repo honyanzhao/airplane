@@ -71,6 +71,13 @@
     animation:sweep 5s linear infinite; mix-blend-mode:screen;
   }
   @keyframes sweep{to{transform:rotate(360deg);}}
+  /* 雷达圆形边界 + 同心环（置于格子之上，明确扫描处在圆形范围内） */
+  .grid::after{
+    content:""; position:absolute; inset:0; z-index:2; pointer-events:none; border-radius:50%;
+    background:
+      repeating-radial-gradient(circle closest-side at 50% 50%, rgba(43,255,158,.12) 0 1px, transparent 1px 30px),
+      radial-gradient(circle closest-side at 50% 50%, transparent 0 92%, rgba(43,255,158,.5) 92% 97%, transparent 97%);
+  }
   .grid > *{z-index:1;}
   /* 己方飞机：战术友军标记（统一雷达绿，机头为指挥节点） */
   .cell.pl-head{background:var(--radar); color:#03110c; font-weight:800; font-size:13px; border:1px solid var(--radar); box-shadow:0 0 10px rgba(43,255,158,.5);}
