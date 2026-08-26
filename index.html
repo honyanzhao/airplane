@@ -59,10 +59,14 @@
         rgba(43,255,158,.06) 62% 63%, transparent 63%),
       var(--scope);
   }
-  /* 雷达扫描（SVG 真实圆弧扇形：前沿亮线，向后 30° 渐隐，外缘为圆弧而非直边） */
+  /* 雷达扫描：30° 均匀扇形（圆形、头尾等长、无明暗过渡；纯 conic-gradient，三盘一致） */
   .grid::before{
     content:""; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:50%;
-    background:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20200%20200'%3E%3Cpath%20d%3D'M100%2C100%20L195%2C100%20A95%2C95%200%200%201%20182.3%2C147.5%20Z'%20fill%3D'%232bff9e'%20fill-opacity%3D'0.5'%2F%3E%3C%2Fsvg%3E") center/cover no-repeat;
+    background:conic-gradient(from 0deg,
+      rgba(43,255,158,.5) 0deg,
+      rgba(43,255,158,.5) 30deg,
+      rgba(43,255,158,0) 30deg,
+      rgba(43,255,158,0) 360deg);
     animation:sweep 5s linear infinite; mix-blend-mode:screen;
   }
   @keyframes sweep{to{transform:rotate(360deg);}}
