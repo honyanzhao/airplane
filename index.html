@@ -92,7 +92,16 @@
   .cell.boom{background:var(--boom-bg); color:var(--boom-ink); border:1px solid var(--boom-edge); box-shadow:0 0 12px rgba(255,90,90,.35);}
   .cell.empty{background:transparent; color:var(--empty-ink); border-color:transparent;}
   .cell.disabled{cursor:default;}
-  .setup-dirs{display:flex; gap:8px; align-items:center; margin-top:10px;}
+  .setup-actions{display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; margin-top:14px;}
+  .dir-pad{display:grid; grid-template-columns:repeat(3,46px); grid-template-rows:repeat(3,42px); gap:6px; padding:6px; border:1px solid var(--line-2); border-radius:4px; background:rgba(43,255,158,.03);}
+  .dir-pad .dir-btn:nth-child(1){grid-area:1/2;}
+  .dir-pad .dir-btn:nth-child(2){grid-area:2/3;}
+  .dir-pad .dir-btn:nth-child(3){grid-area:3/2;}
+  .dir-pad .dir-btn:nth-child(4){grid-area:2/1;}
+  .dir-pad::after{content:""; grid-area:2/2; width:10px; height:10px; border-radius:50%; border:1px solid var(--line-2); align-self:center; justify-self:center;}
+  .action-groups{display:flex; flex-direction:column; gap:12px; flex:1 1 240px; min-width:240px;}
+  .confirm-row{margin-top:2px;}
+  .battle-foot{justify-content:flex-end;}
   .dir-btn{width:44px; height:40px; font-size:20px; padding:0; border-radius:3px; background:rgba(43,255,158,.06); color:var(--radar); border:1px solid var(--line-2); transition:all .12s;}
   .dir-btn:hover{background:rgba(43,255,158,.14);}
   .dir-btn.active{background:var(--radar); color:#03110c; box-shadow:0 0 12px rgba(43,255,158,.5);}
@@ -192,20 +201,24 @@
       <div class="col">
         <div id="setupInfo" class="setup-info"></div>
         <div id="setupBoardWrap" class="grid" style="margin-top:10px;"></div>
-        <div class="setup-dirs">
-          <button class="dir-btn active" data-dir="0" title="机头朝上">↑</button>
-          <button class="dir-btn" data-dir="1" title="机头朝右">→</button>
-          <button class="dir-btn" data-dir="2" title="机头朝下">↓</button>
-          <button class="dir-btn" data-dir="3" title="机头朝左">←</button>
-        </div>
-        <div class="controls" style="margin-top:10px;">
-          <button id="randomBtn" class="ghost">⟳ 随机布阵</button>
-          <button id="clearBtn" class="ghost">清空</button>
-        </div>
-        <div class="setup-info" id="placeHint" style="margin-top:8px;"></div>
-        <div class="controls">
-          <button id="confirmBtn" disabled>确认布置 →</button>
-          <button id="backHomeBtn" class="ghost">← 重选模式</button>
+        <div class="setup-actions">
+          <div class="dir-pad">
+            <button class="dir-btn active" data-dir="0" title="机头朝上">↑</button>
+            <button class="dir-btn" data-dir="1" title="机头朝右">→</button>
+            <button class="dir-btn" data-dir="2" title="机头朝下">↓</button>
+            <button class="dir-btn" data-dir="3" title="机头朝左">←</button>
+          </div>
+          <div class="action-groups">
+            <div class="controls">
+              <button id="randomBtn" class="ghost">⟳ 随机布阵</button>
+              <button id="clearBtn" class="ghost">清空</button>
+            </div>
+            <div class="setup-info" id="placeHint"></div>
+            <div class="controls confirm-row">
+              <button id="confirmBtn" disabled>确认布置 →</button>
+              <button id="backHomeBtn" class="ghost">← 重选模式</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -230,7 +243,7 @@
         <div id="log" class="log"></div>
       </div>
     </div>
-    <div class="controls">
+    <div class="controls battle-foot">
       <button id="restartBtn" class="ghost">↺ 重新开始</button>
     </div>
   </div>
