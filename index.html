@@ -59,12 +59,13 @@
         rgba(43,255,158,.06) 62% 63%, transparent 63%),
       var(--scope);
   }
-  /* 雷达扫描（圆形扇形：起始高亮，30° 渐隐） */
+  /* 雷达扫描（圆形扇形：前沿亮线，向后 30° 渐隐） */
   .grid::before{
     content:""; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:50%;
     background:conic-gradient(from 0deg,
-      rgba(43,255,158,.95) 0deg,
-      rgba(43,255,158,.5) 3deg,
+      rgba(43,255,158,0) 0deg,
+      rgba(43,255,158,.5) 27deg,
+      rgba(43,255,158,.95) 30deg,
       rgba(43,255,158,0) 30deg,
       rgba(43,255,158,0) 360deg);
     animation:sweep 5s linear infinite; mix-blend-mode:screen;
