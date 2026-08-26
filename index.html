@@ -121,6 +121,8 @@
   button.ghost{background:transparent; color:var(--muted); border-color:var(--line-2);}
   button.ghost:hover:not(:disabled){color:var(--radar); border-color:var(--radar); box-shadow:none; background:rgba(43,255,158,.08);}
   button:disabled{opacity:.4; cursor:not-allowed;}
+  /* 操作按钮统一尺寸：等宽等高、内容居中 */
+  .act-btn{height:42px; min-width:150px; display:inline-flex; align-items:center; justify-content:center;}
   select{padding:8px 10px; border-radius:3px; border:1px solid var(--line-2); font-size:13px; font-family:inherit; background:var(--scope); color:var(--ink); letter-spacing:.5px;}
   .overlay{
     position:fixed; inset:0; background:rgba(2,10,7,.86); display:none; align-items:center; justify-content:center; z-index:1100;
@@ -189,8 +191,8 @@
     </div>
     <div class="setup-info" id="rulesModeHint" style="text-align:center;"></div>
     <div class="center-actions">
-      <button class="ghost" id="rulesBackBtn">← 返回</button>
-      <button id="rulesStartBtn">开始布置 ▸</button>
+      <button class="ghost act-btn" id="rulesBackBtn">← 返回</button>
+      <button class="act-btn" id="rulesStartBtn">开始布置 ▸</button>
     </div>
   </section>
 
@@ -210,13 +212,13 @@
           </div>
           <div class="action-groups">
             <div class="controls">
-              <button id="randomBtn" class="ghost">⟳ 随机布阵</button>
-              <button id="clearBtn" class="ghost">清空</button>
+              <button id="randomBtn" class="ghost act-btn">⟳ 随机布阵</button>
+              <button id="clearBtn" class="ghost act-btn">清空</button>
             </div>
             <div class="setup-info" id="placeHint"></div>
             <div class="controls confirm-row">
-              <button id="confirmBtn" disabled>确认布置 →</button>
-              <button id="backHomeBtn" class="ghost">← 重选模式</button>
+              <button id="confirmBtn" class="act-btn" disabled>确认布置 →</button>
+              <button id="backHomeBtn" class="ghost act-btn">← 重选模式</button>
             </div>
           </div>
         </div>
@@ -244,7 +246,7 @@
       </div>
     </div>
     <div class="controls battle-foot">
-      <button id="restartBtn" class="ghost">↺ 重新开始</button>
+      <button id="restartBtn" class="ghost act-btn">↺ 重新开始</button>
     </div>
   </div>
 </div>
@@ -254,7 +256,7 @@
   <div class="box">
     <h2 id="ovTitle">作战部署</h2>
     <p id="ovText"></p>
-    <button id="ovBtn">进入作战 ▸</button>
+    <button id="ovBtn" class="act-btn">进入作战 ▸</button>
   </div>
 </div>
 
