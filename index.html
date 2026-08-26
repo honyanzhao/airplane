@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飞机大战 · 9×9 双人对战</title>
+<style>
+  :root{
+    --bg:#0b1f38; --panel:#102a4c; --ink:#eaf2fb; --muted:#9fb3c8;
+    --line:#274464;
+    --board-bg:#0d2746; --cell-water:#1c456f; --water-dark:#2a5d92;
+    --accent:#36a3ff; --accent-d:#1c5fb0;
+    --fire:#ff7a3c; --boom:#ff4d4d; --miss:#7f93a8;
+    --ok:#2ecc71; --bad:#ff5a5a;
+    --p1:#36a3ff; --p2:#ffb13c;
+    --plane:#ffd24d; --plane-head:#ff9f1c; --plane-stroke:#8a5a00;
+    --miss-bg:#13243f; --fire-bg:#7a3414; --boom-bg:#6e1f1f; --empty-bg:#1d3a5e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+    background:var(--bg); color:var(--ink); padding:16px;
+  }
+  h1{font-size:22px; margin:0 0 4px;}
+  .sub{color:var(--muted); font-size:13px; margin-bottom:14px;}
+  .wrap{max-width:980px; margin:0 auto;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 2px 10px rgba(30,60,100,.06);}
+  .row{display:flex; gap:18px; flex-wrap:wrap;}
+  .col{flex:1 1 360px; min-width:320px;}
+  .board-title{font-weight:600; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .board-title .tag{font-size:12px; color:var(--muted); font-weight:400;}
+  .grid{
+    display:grid; grid-template-columns:22px repeat(9,34px); grid-template-rows:22px repeat(9,34px);
+    gap:3px; background:var(--board-bg); padding:3px; border-radius:8px; user-select:none; position:relative;
+  }
+  /* 己方飞机部件着色（替代 SVG 渲染，网格始终可见） */
+  .cell.pl-head{background:var(--boom-bg); color:#ffd6d6; font-size:13px;}
+  .cell.pl-wing{background:var(--plane); color:#3a2a00; font-size:12px;}
+  .cell.pl-body{background:#ffb13c; color:#3a2600; font-size:12px;}
+  .cell.pl-tail{background:#2ecc71; color:#06351c; font-size:12px;}
+  /* 放置预览高亮 */
+  .cell.preview-ok{outline:2px solid var(--ok); outline-offset:-2px; background:var(--cell-water);}
+  .cell.preview-bad{outline:2px solid var(--bad); outline-offset:-2px; background:var(--cell-water);}
+  .cell{
+    background:var(--cell-water); border-radius:4px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:700; aspect-ratio:1/1; cursor:pointer; position:relative; color:var(--ink);
+    transition:transform .05s;
+  }
+  .cell.corner{background:transparent; cursor:default; color:var(--muted); font-size:12px; font-weight:700;}
+  .cell.unknown{background:var(--cell-water);}
+  .cell.clickable:hover{background:var(--water-dark); transform:scale(1.04);}
+  .cell.miss{background:var(--miss-bg); color:#c4d3e2;}
+  .cell.fire{background:var(--fire-bg); color:#ffd2b0;}
+  .cell.boom{background:var(--boom-bg); color:#ffd6d6;}
+  .cell.empty{background:var(--empty-bg); color:#9fc0e0;}
+  .cell.disabled{cursor:default;}
+  .setup-dirs{display:flex; gap:8px; align-items:center; margin-top:10px;}
+  .dir-btn{width:44px; height:40px; font-size:20px; padding:0; border-radius:8px; background:#10243f; color:var(--accent); border:1px solid var(--accent);}
+  .dir-btn.active{background:var(--accent); color:#fff; box-shadow:0 0 0 2px var(--plane-head);}
+  .dir-label{font-size:13px; color:var(--muted); margin-left:6px;}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--muted); margin-top:8px;}
+  .legend span{display:inline-flex; align-items:center; gap:4px;}
+  .dot{width:14px; height:14px; border-radius:3px; display:inline-block;}
+  .status{margin:12px 0; padding:10px 14px; background:#0a1c33; border:1px solid var(--line); border-radius:8px; font-weight:600; color:var(--ink);}
+  .log{height:160px; overflow:auto; background:#0a1c33; border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px; line-height:1.7; color:var(--ink);}
+  .log .me{color:#7cc4ff;} .log .ai{color:#ffc662;} .log .sys{color:#9fb3c8;}
+  .controls{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+  button{
+    font-family:inherit; font-size:14px; padding:9px 16px; border-radius:8px; border:1px solid var(--accent);
+    background:var(--accent); color:#fff; cursor:pointer; font-weight:600;
+  }
+  button.ghost{background:#fff; color:var(--accent);}
+  button:disabled{opacity:.45; cursor:not-allowed;}
+  select{padding:8px 10px; border-radius:8px; border:1px solid var(--line); font-size:14px; font-family:inherit;}
+  .overlay{
+    position:fixed; inset:0; background:rgba(20,35,55,.82); display:none; align-items:center; justify-content:center; z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .overlay .box{background:#fff; padding:28px 34px; border-radius:14px; text-align:center; max-width:420px;}
+  .overlay h2{margin:0 0 10px;}
+  .overlay p{color:var(--muted); margin:6px 0 18px; line-height:1.6;}
+  .setup-info{font-size:13px; color:var(--muted); margin:6px 0;}
+  .badge{display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; font-weight:600; background:#eaf2ff; color:var(--accent);}
+  .hidden{display:none !important;}
+  .score{font-size:14px; font-weight:600;}
+  .score b{font-size:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>✈️ 飞机大战（9×9）</h1>
+  <div class="sub">三架飞机藏在棋盘里：头 1 · 翼 5 · 身 1 · 尾 3。轮流报坐标打击，先击落对方三架者胜。</div>
+
+  <!-- 设置区 -->
+  <div id="setup" class="panel">
+    <div class="board-title">游戏设置</div>
+    <div class="row">
+      <div class="col">
+        <label class="setup-info">对战模式</label>
+        <select id="modeSel">
+          <option value="pvp">双人对战（同设备轮流）</option>
+          <option value="pve">人机对战（你 vs 电脑）</option>
+        </select>
+        <div id="setupInfo" class="setup-info" style="margin-top:12px;"></div>
+        <div id="setupBoardWrap" class="grid" style="margin-top:10px;"></div>
+        <div class="setup-dirs">
+          <button class="dir-btn active" data-dir="0" title="机头朝上">↑</button>
+          <button class="dir-btn" data-dir="1" title="机头朝右">→</button>
+          <button class="dir-btn" data-dir="2" title="机头朝下">↓</button>
+          <button class="dir-btn" data-dir="3" title="机头朝左">←</button>
+          <span class="dir-label" id="dirLabel">机头方向：上</span>
+        </div>
+        <div class="controls" style="margin-top:10px;">
+          <button id="randomBtn" class="ghost">🎲 随机布置</button>
+          <button id="clearBtn" class="ghost">清空</button>
+        </div>
+        <div class="setup-info" id="placeHint" style="margin-top:8px;"></div>
+        <div class="controls">
+          <button id="confirmBtn" disabled>确认布置 →</button>
+          <button id="startBtn" class="hidden">开始游戏 ▶</button>
+        </div>
+      </div>
+      <div class="col">
+        <div class="board-title">规则 & 判定</div>
+        <div class="legend" style="flex-direction:column; gap:8px; color:var(--ink);">
+          <div>① 打中 <b>机头</b>：飞机爆炸 💥，之后打其翼/身/尾均标记为“空”(×)，不再中弹。</div>
+          <div>② 打中 <b>翼/身/尾</b>：中弹 🔥（燃起小火苗）。</div>
+          <div>③ 打中 <b>其他水域</b>：炸出一个坑 ·（空白）。</div>
+          <div style="color:var(--muted);">棋盘坐标：列 A–I（左→右），行 1–9（上→下）。例如 C4 = 第 C 列第 4 行。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 对战区 -->
+  <div id="battle" class="panel hidden" style="margin-top:16px;">
+    <div class="status" id="statusBar">游戏开始</div>
+    <div class="row">
+      <div class="col">
+        <div class="board-title"><span id="ownTitle">我的舰队</span><span class="tag" id="ownTag"></span></div>
+        <div id="ownBoard" class="grid"></div>
+      </div>
+      <div class="col">
+        <div class="board-title"><span id="enemyTitle">攻击敌方</span><span class="tag">点击格子报坐标</span></div>
+        <div id="enemyBoard" class="grid"></div>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--cell-water)"></i>未知（水域）</span>
+          <span><i class="dot" style="background:var(--miss-bg)"></i>· 坑</span>
+          <span><i class="dot" style="background:var(--fire-bg)"></i>🔥 中弹</span>
+          <span><i class="dot" style="background:var(--boom-bg)"></i>💥 击落</span>
+          <span><i class="dot" style="background:var(--empty-bg)"></i>× 空(已毁机残格)</span>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px;">
+      <div class="col">
+        <div class="board-title">战况日志</div>
+        <div id="log" class="log"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="restartBtn" class="ghost">↺ 重新开始</button>
+    </div>
+  </div>
+</div>
+
+<!-- 交接遮罩 -->
+<div id="overlay" class="overlay">
+  <div class="box">
+    <h2 id="ovTitle">交接设备</h2>
+    <p id="ovText"></p>
+    <button id="ovBtn">我准备好了 ▶</button>
+  </div>
+</div>
+
+<script>
+/* ===================== 基础配置 ===================== */
+const SIZE = 9;
+const COLS = ['A','B','C','D','E','F','G','H','I'];
+// 飞机基准形状（朝上，机头在顶部）。真实连贯飞机：机头紧贴机翼中点（同一列相邻），
+// 机身 / 机尾沿主轴向下连续，视觉上是一架完整飞机。旋转后形状为 4×5 互换（10 格无法四向严格对称，此为真飞机必然）。
+// 行 0 头 / 行 1 翼(5) / 行 2 身 / 行 3 尾(3)；列 -2..2 翼展。机翼中点局部偏移 = (1,0)。
+const BASE_OFFSETS = [
+  {dr:0,dc:0,part:'head'},                                   // 头 1（机头在顶部）
+  {dr:1,dc:-2,part:'wing'},{dr:1,dc:-1,part:'wing'},         // 翼 5（机头正下方一行，机翼中点与机头同列相邻）
+  {dr:1,dc:0,part:'wing'},{dr:1,dc:1,part:'wing'},{dr:1,dc:2,part:'wing'},
+  {dr:2,dc:0,part:'body'},                                   // 身 1
+  {dr:3,dc:-1,part:'tail'},{dr:3,dc:0,part:'tail'},{dr:3,dc:1,part:'tail'} // 尾 3
+];
+
+function planeOffsets(rot){
+  // 以机头(0,0)为锚点的相对偏移；旋转后机头仍在 (0,0)
+  let offs = BASE_OFFSETS.map(o=>({dr:o.dr, dc:o.dc, part:o.part}));
+  for(let k=0;k<rot;k++) offs = offs.map(o=>({dr:o.dc, dc:-o.dr, part:o.part})); // 顺时针 90°
+  return offs;
+}
+function getPlaneCells(rot, hr, hc){
+  // odr/odc 保留“旋转前”的原始偏移，用于渲染时识别机身主轴(odc===0)与方向
+  const offs = planeOffsets(rot);
+  return offs.map((o,i)=>({r:hr+o.dr, c:hc+o.dc, part:o.part, odr:BASE_OFFSETS[i].dr, odc:BASE_OFFSETS[i].dc}));
+}
+// 机翼中点在“以机头为原点”的局部坐标（基准 (dr:1,dc:0) 旋转 rot 次），用于把鼠标锚定到机翼中点
+function wingMidOffset(rot){
+  let o = {dr:1, dc:0};
+  for(let k=0;k<rot;k++) o = {dr:o.dc, dc:-o.dr}; // 顺时针 90°
+  return o;
+}
+// 以 (wr,wc) 为机翼中点所在格，反推机头后展开整架飞机
+function getPlaneCellsAtWing(rot, wr, wc){
+  const wm = wingMidOffset(rot);
+  return getPlaneCells(rot, wr - wm.dr, wc - wm.dc);
+}
+function coord(r,c){ return COLS[c] + (r+1); }
+function emptyGrid(){ return Array.from({length:SIZE},()=>Array.from({length:SIZE},()=>({plane:null,part:null,hit:false}))); }
+function emptyTrack(){ return Array.from({length:SIZE},()=>Array.from({length:SIZE},()=>({state:'unknown'}))); }
+function rnd(n){ return Math.floor(Math.random()*n); }
+
+/* ===================== 游戏状态 ===================== */
+let mode = 'pvp';
+let players = [];          // [{name, fleet, tracking, planes:[{destroyed,cells}], destroyedCount}]
+let turn = 0;              // 当前攻击方（pvp 用）
+let gameOver = false;
+let pendingOverlay = null; // 交接遮罩后的回调
+
+// 布置阶段
+let setupPlayer = 0;
+let manualRot = 0;
+let placedCount = 0;
+let hoverRC = null;
+
+function newPlayer(name){ return {name, fleet:emptyGrid(), tracking:emptyTrack(), planes:[], destroyedCount:0}; }
+
+/* ===================== 布置逻辑 ===================== */
+function validPlacement(cells, board){
+  for(const cc of cells){
+    if(cc.r<0||cc.r>=SIZE||cc.c<0||cc.c>=SIZE) return false;
+    if(board[cc.r][cc.c].plane!==null) return false;
+  }
+  return true;
+}
+function randomPlace(p){
+  // 外层整体重试：9×9 上两架特定位置的飞机可能把空位切割到放不下第三架，
+  // 单次放置放弃太早会导致舰队残缺，故整盘重来。
+  const MAX_OUTER = 300;
+  for(let outer=0; outer<MAX_OUTER; outer++){
+    p.fleet = emptyGrid(); p.planes = [];
+    let ok = true;
+    for(let i=0;i<3;i++){
+      let placed = false, inner = 0;
+      while(!placed && inner<400){
+        inner++;
+        const rot = rnd(4);
+        // 以机翼中点为随机锚点（留出 2 格边距，保证 5×5 整架在界内）
+        const wr = 2 + rnd(SIZE-4), wc = 2 + rnd(SIZE-4);
+        const cells = getPlaneCellsAtWing(rot, wr, wc);
+        if(validPlacement(cells,p.fleet)){
+          const idx = p.planes.length;
+          cells.forEach(cc=>{ p.fleet[cc.r][cc.c] = {plane:idx, part:cc.part, hit:false}; });
+          p.planes.push({destroyed:false, rot, cells});
+          placed = true;
+        }
+      }
+      if(!placed){ ok = false; break; }
+    }
+    if(ok && p.planes.length===3) return;
+  }
+  console.warn('randomPlace 兜底：未能在限定次数内完成布置');
+}
+
+/* ===================== 打击逻辑 ===================== */
+// 攻击方 ai 打击防守方 di 的 (r,c)
+function doAttack(ai, di, r, c){
+  const attacker = players[ai], defender = players[di];
+  const tcell = attacker.tracking[r][c];
+  if(tcell.state!=='unknown') return {repeat:true};
+  const dcell = defender.fleet[r][c];
+
+  if(dcell.plane===null){ // 水域
+    tcell.state='miss';
+    dcell.hit=true;
+    return {result:'miss', r, c};
+  }
+  const pIdx = dcell.plane;
+  const plane = defender.planes[pIdx];
+  if(plane.destroyed){ // 已击落，再打其部件视为“空”
+    tcell.state='boom';
+    return {result:'empty', r, c};
+  }
+  if(dcell.part==='head'){ // 情况1：机头爆炸（仅标记机头，整架不自动揭示）
+    plane.destroyed=true;
+    defender.destroyedCount++;
+    attacker.tracking[r][c].state='boom';
+    defender.fleet[r][c].hit=true;
+    return {result:'head', r, c, plane:pIdx};
+  }
+  // 情况2：翼/身/尾中弹
+  tcell.state='fire';
+  dcell.hit=true;
+  return {result:'fire', r, c, part:dcell.part};
+}
+
+/* ===================== AI（人机模式） ===================== */
+function aiChooseTarget(){
+  const t = players[1].tracking;
+  const cands = [];
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+    if(t[r][c].state==='fire'){
+      for(const [dr,dc] of dirs){
+        const nr=r+dr, nc=c+dc;
+        if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE && t[nr][nc].state==='unknown') cands.push({r:nr,c:nc});
+      }
+    }
+  }
+  if(cands.length) return cands[rnd(cands.length)];
+  const unk=[];
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++) if(t[r][c].state==='unknown') unk.push({r,c});
+  return unk[rnd(unk.length)];
+}
+function aiMove(){
+  if(gameOver) return;
+  const tgt = aiChooseTarget();
+  const res = doAttack(1,0,tgt.r,tgt.c);
+  logAI(res, tgt);
+  renderBattle();
+  if(players[0].destroyedCount===3){ endGame(1); return; }
+  setStatus('轮到你攻击 — 点击右侧敌方棋盘报坐标');
+}
+
+/* ===================== 渲染 ===================== */
+const $ = id => document.getElementById(id);
+
+function buildGrid(container, onClick, opts={}){
+  container.innerHTML='';
+  // 角落
+  const corner=document.createElement('div'); corner.className='cell corner'; container.appendChild(corner);
+  // 列标 A-I
+  for(let c=0;c<SIZE;c++){
+    const h=document.createElement('div'); h.className='cell corner'; h.textContent=COLS[c]; container.appendChild(h);
+  }
+  for(let r=0;r<SIZE;r++){
+    const rh=document.createElement('div'); rh.className='cell corner'; rh.textContent=(r+1); container.appendChild(rh);
+    for(let c=0;c<SIZE;c++){
+      const cell=document.createElement('div');
+      cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c;
+      if(opts.clickable){ cell.classList.add('clickable'); cell.addEventListener('click',()=>onClick(r,c)); }
+      if(opts.hoverPreview){ cell.addEventListener('mouseover',()=>onPreview(r,c)); }
+      container.appendChild(cell);
+    }
+  }
+  if(opts.hoverPreview){ container.addEventListener('mouseleave', clearPreview); }
+}
+
+/* ===================== 飞机格子着色（替代 SVG 渲染） ===================== */
+// 把已布置飞机以色块+符号显示在棋盘格上（网格始终可见）
+function paintFleet(container, player){
+  container.querySelectorAll('.cell[data-r]').forEach(el=>{
+    el.classList.remove('pl-head','pl-wing','pl-body','pl-tail');
+    el.textContent='';
+    const r=+el.dataset.r, c=+el.dataset.c;
+    const v=player.fleet[r][c];
+    if(v.plane!==null){
+      el.classList.add('pl-'+v.part);
+      if(v.part==='head') el.textContent='头';
+    }
+  });
+}
+// 放置预览：高亮将要落子的格子（机翼中点锚定）
+let previewCells=null;
+function onPreview(r,c){
+  if(placedCount>=3) return;
+  hoverRC={r,c};
+  const cells=getPlaneCellsAtWing(manualRot, r, c); // (r,c) 为机翼中点所在格
+  const valid=validPlacement(cells, players[setupPlayer].fleet);
+  previewCells={cells, valid};
+  paintPreview();
+}
+function clearPreview(){
+  hoverRC=null; previewCells=null; paintPreview();
+}
+function paintPreview(){
+  const wrap=$('setupBoardWrap');
+  wrap.querySelectorAll('.cell[data-r]').forEach(el=> el.classList.remove('preview-ok','preview-bad'));
+  if(previewCells){
+    const set=new Set(previewCells.cells.map(x=>x.r+','+x.c));
+    wrap.querySelectorAll('.cell[data-r]').forEach(el=>{
+      const r=+el.dataset.r, c=+el.dataset.c;
+      if(set.has(r+','+c)) el.classList.add(previewCells.valid?'preview-ok':'preview-bad');
+    });
+  }
+}
+
+function renderSetup(){
+  const wrap = $('setupBoardWrap');
+  buildGrid(wrap, (r,c)=>placeManual(r,c), {clickable:true, hoverPreview:true});
+  paintFleet(wrap, players[setupPlayer]);
+  $('placeHint').textContent = `已布置 ${placedCount}/3 架${placedCount<3?'（点击棋盘放置下一架，或点“随机布置”一键完成）':''}`;
+  $('confirmBtn').disabled = placedCount<3;
+}
+
+function renderBattle(){
+  const cur = (mode==='pve') ? players[0] : players[turn];
+  const oppIdx = (mode==='pve') ? 1 : (1-turn);
+  const opp = players[oppIdx];
+
+  $('ownTitle').textContent = (mode==='pve')?'我的舰队（你）':'我的舰队 · '+cur.name;
+  $('enemyTitle').textContent = (mode==='pve')?'攻击敌方（电脑）':'攻击敌方 · '+opp.name;
+  $('ownTag').textContent = `已损失 ${cur.destroyedCount}/3 架`;
+
+  // 自己舰队盘（显示己方飞机 + 受击情况）
+  const own = $('ownBoard');
+  buildGrid(own, ()=>{}, {});
+  own.querySelectorAll('.cell[data-r]').forEach(el=>{
+    const r=+el.dataset.r, c=+el.dataset.c; const v=cur.fleet[r][c];
+    if(v.plane!==null){
+      const plane = cur.planes[v.plane];
+      if(plane.destroyed){ el.classList.add('boom'); el.textContent='💥'; }   // 已击落：整架显示残骸
+      else if(v.hit){ el.classList.add('fire'); el.textContent='🔥'; }         // 中弹
+      else { el.classList.add('pl-'+v.part); if(v.part==='head') el.textContent='头'; } // 完好飞机：格子着色显示
+    } else if(v.hit){ el.classList.add('miss'); el.textContent='·'; }
+  });
+
+  // 敌方跟踪盘（仅命中/未命中，可点击攻击）
+  const en = $('enemyBoard');
+  buildGrid(en, (r,c)=>onAttack(r,c), {clickable:true});
+  en.querySelectorAll('.cell[data-r]').forEach(el=>{
+    const r=+el.dataset.r, c=+el.dataset.c; const s=cur.tracking[r][c].state;
+    if(s==='miss'){ el.classList.add('miss'); el.textContent='·'; el.classList.remove('clickable'); }
+    else if(s==='fire'){ el.classList.add('fire'); el.textContent='🔥'; el.classList.remove('clickable'); }
+    else if(s==='boom'){ el.classList.add('boom'); el.textContent='💥'; el.classList.remove('clickable'); }
+    else if(s==='empty'){ el.classList.add('empty'); el.textContent='×'; el.classList.remove('clickable'); }
+  });
+}
+
+/* ===================== 控制流 ===================== */
+function onAttack(r,c){
+  if(gameOver) return;
+  let res;
+  if(mode==='pve'){ res = doAttack(0,1,r,c); }
+  else { res = doAttack(turn, 1-turn, r,c); }
+  if(res.repeat){ toast('该坐标已打击过'); return; }
+  logAttack(res);
+  renderBattle();
+  // 胜负
+  const defenderIdx = (mode==='pve')?1:(1-turn);
+  if(players[defenderIdx].destroyedCount===3){
+    endGame((mode==='pve')?0:turn);
+    return;
+  }
+  // 切换
+  if(mode==='pvp'){
+    const nextName = players[1-turn].name;
+    showOverlay('轮到 '+nextName, '请将设备交给 '+nextName+'，准备好后点击继续。', ()=>{
+      turn = 1-turn; renderBattle(); setStatus('轮到 '+players[turn].name+' 攻击');
+    });
+  } else {
+    setStatus('电脑思考中…');
+    setTimeout(aiMove, 650);
+  }
+}
+
+function endGame(winnerIdx){
+  gameOver = true;
+  const msg = (mode==='pve')
+    ? (winnerIdx===0?'🎉 你赢了！三架敌机全部击落！':'💥 电脑获胜，你的三架飞机被击落。')
+    : ('🎉 '+players[winnerIdx].name+' 获胜！三架敌机全部击落！');
+  setStatus(msg);
+  logSys(msg);
+  showOverlay('游戏结束', msg+' 点击“重新开始”可再来一局。', null);
+  $('ovBtn').textContent='好的';
+}
+
+/* ===================== 日志 ===================== */
+function logAttack(res){
+  const lg=$('log'); const div=document.createElement('div');
+  const who = (mode==='pve')?'<span class="me">你</span>':('<span class="me">'+players[turn].name+'</span>');
+  const coordTxt = coord(res.r,res.c);
+  let txt='';
+  if(res.result==='miss') txt = who+' 打击 '+coordTxt+'：炸出坑 ·（空）。';
+  else if(res.result==='fire') txt = who+' 打击 '+coordTxt+'：命中'+partName(res.part)+'，🔥 中弹！';
+  else if(res.result==='head') txt = who+' 打击 '+coordTxt+'：💥 命中机头，整架飞机爆炸！';
+  else if(res.result==='empty') txt = who+' 打击 '+coordTxt+'：该机已毁，此格为空。';
+  div.innerHTML = txt; lg.appendChild(div); lg.scrollTop=lg.scrollHeight;
+}
+function logAI(res,tgt){
+  const lg=$('log'); const div=document.createElement('div');
+  const coordTxt = coord(tgt.r,tgt.c); let txt='';
+  if(res.result==='miss') txt='<span class="ai">电脑</span> 打击 '+coordTxt+'：炸出坑 ·（空）。';
+  else if(res.result==='fire') txt='<span class="ai">电脑</span> 打击 '+coordTxt+'：命中'+partName(res.part)+'，🔥 中弹！';
+  else if(res.result==='head') txt='<span class="ai">电脑</span> 打击 '+coordTxt+'：💥 命中机头，你的飞机爆炸！';
+  div.innerHTML=txt; lg.appendChild(div); lg.scrollTop=lg.scrollHeight;
+}
+function logSys(t){ const lg=$('log'); const d=document.createElement('div'); d.className='sys'; d.textContent=t; lg.appendChild(d); lg.scrollTop=lg.scrollHeight; }
+function partName(p){ return p==='head'?'机头':p==='wing'?'机翼':p==='body'?'机身':'机尾'; }
+function setStatus(t){ $('statusBar').textContent=t; }
+let toastTimer=null;
+function toast(t){ setStatus(t); clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ if(!gameOver) setStatus(mode==='pve'?'轮到你攻击 — 点击右侧敌方棋盘报坐标':'轮到 '+players[turn].name+' 攻击'); },1400); }
+
+function showOverlay(title,text,cb){
+  $('ovTitle').textContent=title; $('ovText').textContent=text;
+  pendingOverlay=cb; $('overlay').classList.add('show');
+}
+$('ovBtn').addEventListener('click',()=>{
+  $('overlay').classList.remove('show');
+  if(pendingOverlay){ const f=pendingOverlay; pendingOverlay=null; f(); }
+});
+
+/* ===================== 布置交互 ===================== */
+function placeManual(r,c){
+  if(placedCount>=3) return;
+  const board = players[setupPlayer].fleet;
+  const cells = getPlaneCellsAtWing(manualRot, r, c); // (r,c) 为机翼中点所在格
+  if(!validPlacement(cells,board)){ toast('位置非法：越界或与已有飞机重叠'); return; }
+  const idx=placedCount;
+  cells.forEach(cc=>{ board[cc.r][cc.c]={plane:idx,part:cc.part,hit:false}; });
+  players[setupPlayer].planes.push({destroyed:false, rot:manualRot, cells});
+  placedCount++;
+  renderSetup();
+}
+function clearSetup(){
+  players[setupPlayer].fleet=emptyGrid(); players[setupPlayer].planes=[]; placedCount=0;
+  $('confirmBtn').classList.remove('hidden'); $('startBtn').classList.add('hidden');
+  renderSetup();
+}
+function randomSetup(){
+  randomPlace(players[setupPlayer]); placedCount=3;
+  renderSetup();
+  $('confirmBtn').classList.remove('hidden'); $('startBtn').classList.add('hidden');
+}
+function setDir(rot){
+  manualRot = rot;
+  $('dirLabel').textContent = '机头方向：' + (rot===0?'上':rot===1?'右':rot===2?'下':'左');
+  updateDirButtons();
+  if(hoverRC) onPreview(hoverRC.r, hoverRC.c);
+}
+function updateDirButtons(){
+  document.querySelectorAll('.dir-btn').forEach(b=>{
+    b.classList.toggle('active', +b.dataset.dir===manualRot);
+  });
+}
+document.querySelectorAll('.dir-btn').forEach(b=>{
+  b.addEventListener('click',()=>setDir(+b.dataset.dir));
+});
+$('randomBtn').addEventListener('click',randomSetup);
+$('clearBtn').addEventListener('click',clearSetup);
+$('confirmBtn').addEventListener('click',confirmSetup);
+$('restartBtn').addEventListener('click',()=>location.reload());
+
+function confirmSetup(){
+  if(placedCount<3) return;
+  if(mode==='pvp'){
+    if(setupPlayer===0){
+      showOverlay('Player 1 布置完成', '请将设备交给 Player 2 进行布置。', ()=>{
+        setupPlayer=1; placedCount=0; manualRot=0;
+        $('setupInfo').textContent='当前：Player 2 布置舰队';
+        setDir(0);
+        $('confirmBtn').classList.remove('hidden'); $('startBtn').classList.add('hidden');
+        renderSetup();
+      });
+    } else {
+      startBattle();
+    }
+  } else {
+    // 人机：电脑随机
+    players[1]=newPlayer('电脑'); randomPlace(players[1]);
+    startBattle();
+  }
+}
+
+/* ===================== 启动 ===================== */
+function startBattle(){
+  $('setup').classList.add('hidden');
+  $('battle').classList.remove('hidden');
+  if(mode==='pvp'){
+    turn=0; setStatus('轮到 '+players[0].name+' 攻击');
+    logSys('对战开始：Player 1 vs Player 2，三架飞机各就各位。');
+  } else {
+    setStatus('轮到你攻击 — 点击右侧敌方棋盘报坐标');
+    logSys('对战开始：你 vs 电脑。');
+  }
+  renderBattle();
+}
+
+$('modeSel').addEventListener('change',e=>{
+  mode=e.target.value;
+  $('setupInfo').textContent = mode==='pvp'?'当前：Player 1 布置舰队':'当前：你的舰队布置（电脑随机）';
+  // 重置
+  players=[newPlayer('Player 1'), newPlayer('Player 2')];
+  setupPlayer=0; placedCount=0; manualRot=0;
+  setDir(0);
+  $('confirmBtn').classList.remove('hidden'); $('startBtn').classList.add('hidden');
+  renderSetup();
+});
+
+// 初始化
+players=[newPlayer('Player 1'), newPlayer('Player 2')];
+$('setupInfo').textContent='当前：Player 1 布置舰队';
+setDir(0);
+renderSetup();
+</script>
+</body>
+</html>
