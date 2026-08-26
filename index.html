@@ -125,18 +125,16 @@
   .hidden{display:none !important;}
   .score{font-size:14px; font-weight:600; letter-spacing:.5px;}
   .score b{font-size:18px; color:var(--radar);}
-  /* 首页 / 规则 — 简洁风（去重装饰、留白克制） */
-  .panel.lite{background:linear-gradient(180deg, rgba(10,40,28,.5), rgba(4,20,13,.55)); box-shadow:none;}
+  /* 首页 / 规则 — 与游戏页一致的作战室风 */
+  .panel.lite{position:relative; background:linear-gradient(180deg, rgba(10,40,28,.5), rgba(4,20,13,.55)); box-shadow:none;}
   .panel.lite::before,.panel.lite::after{display:none;}
-  .home-center{text-align:center; margin-top:8px;}
-  .mode-cards{display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin:6px 0 2px;}
-  .mode-card{flex:1 1 300px; max-width:360px; border:1px solid var(--line-2); border-radius:4px; padding:24px 20px; cursor:pointer; background:rgba(43,255,158,.04); transition:all .15s; text-align:center;}
-  .mode-card:hover{border-color:var(--radar); background:rgba(43,255,158,.10); box-shadow:0 0 22px rgba(43,255,158,.18); transform:translateY(-2px);}
-  .mode-card .mc-ico{font-size:32px; color:var(--radar); display:block; margin-bottom:10px; text-shadow:0 0 12px rgba(43,255,158,.4);}
-  .mode-card .mc-title{font-size:16px; font-weight:800; letter-spacing:3px; color:var(--ink);}
-  .mode-card .mc-desc{font-size:12.5px; color:var(--muted); margin-top:10px; line-height:1.7; letter-spacing:.3px;}
-  .link-btn{background:none; border:none; color:var(--radar); cursor:pointer; font-family:inherit; font-size:13px; letter-spacing:1px; text-decoration:underline; text-underline-offset:3px; padding:6px; margin-top:4px;}
-  .link-btn:hover{color:#eafff5;}
+  .help-btn{position:absolute; top:14px; right:14px; width:34px; height:34px; border:1px solid var(--radar); border-radius:50%; background:rgba(43,255,158,.06); color:var(--radar); font-size:17px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 0 10px rgba(43,255,158,.2); transition:all .15s; font-family:inherit;}
+  .help-btn:hover{background:rgba(43,255,158,.16); box-shadow:0 0 18px rgba(43,255,158,.4);}
+  .mode-stack{display:flex; flex-direction:column; gap:14px; max-width:440px; margin:4px auto 0;}
+  .mode-row{display:flex; align-items:center; gap:16px; border:1px solid var(--line-2); border-radius:4px; padding:18px 22px; cursor:pointer; background:rgba(43,255,158,.04); transition:all .15s;}
+  .mode-row:hover{border-color:var(--radar); background:rgba(43,255,158,.10); box-shadow:0 0 22px rgba(43,255,158,.18);}
+  .mode-row .mc-ico{font-size:26px; color:var(--radar); display:block; text-shadow:0 0 12px rgba(43,255,158,.4);}
+  .mode-row .mc-title{font-size:16px; font-weight:800; letter-spacing:3px; color:var(--ink);}
   .rules-list{display:flex; flex-direction:column; gap:16px; max-width:640px; margin:8px auto 16px;}
   .rule-item{display:flex; gap:14px; align-items:flex-start;}
   .rule-num{flex:none; width:28px; height:28px; border:1px solid var(--radar); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--radar); font-size:13px; font-weight:800; box-shadow:0 0 10px rgba(43,255,158,.2);}
@@ -148,31 +146,25 @@
 <body>
 <div class="wrap">
   <h1><span class="radar-ico">◎</span>飞机大战<span class="en">AIR BATTLE GRID</span></h1>
-  <div class="sub">三架飞机藏在棋盘里：头 1 · 翼 5 · 身 1 · 尾 3。轮流报坐标打击，先击落对方三架者胜。</div>
 
   <!-- 首页 -->
   <section id="home" class="panel lite">
-    <div class="board-title">作战指挥 · 选择模式</div>
-    <div class="mode-cards">
-      <div class="mode-card" id="pvpCard">
+    <button class="help-btn" id="helpBtn" title="帮助">?</button>
+    <div class="mode-stack">
+      <div class="mode-row" id="pvpCard">
         <span class="mc-ico">⚔</span>
         <div class="mc-title">双人对战</div>
-        <div class="mc-desc">同设备轮流操作，两名指挥官各自隐藏舰队、依次报坐标打击。</div>
       </div>
-      <div class="mode-card" id="pveCard">
+      <div class="mode-row" id="pveCard">
         <span class="mc-ico">☣</span>
         <div class="mc-title">人机对战</div>
-        <div class="mc-desc">你 vs 电脑 AI。你布置舰队，电脑自动布阵并还击。</div>
       </div>
-    </div>
-    <div class="home-center">
-      <button class="link-btn" id="toRulesBtn">查看游戏规则 →</button>
     </div>
   </section>
 
-  <!-- 规则页 -->
+  <!-- 规则页（帮助） -->
   <section id="rules" class="panel lite hidden">
-    <div class="board-title">游戏规则</div>
+    <div class="board-title">帮助</div>
     <div class="rules-list">
       <div class="rule-item"><div class="rule-num">1</div><div class="rule-text">每方在 9×9 棋盘（列 A–I、行 1–9）中隐藏 <b>三架飞机</b>，每架 10 格：机头 1 · 机翼 5 · 机身 1 · 机尾 3。</div></div>
       <div class="rule-item"><div class="rule-num">2</div><div class="rule-text">轮流报坐标打击。<b>命中机头 ✸</b> 整架爆炸，此后打其翼/身/尾均记为“空”(×)；<b>命中翼/身/尾 ⊕</b> 中弹；<b>打中水域</b> 炸出坑 ·。</div></div>
@@ -686,10 +678,11 @@ function showStep(name){
   });
 }
 function gotoRules(){
-  $('rulesModeHint').textContent = '已选模式：' + (selectedMode==='pvp'?'双人对战':'人机对战');
+  $('rulesModeHint').textContent = selectedMode ? ('已选模式：' + (selectedMode==='pvp'?'双人对战':'人机对战')) : '';
   showStep('rules');
 }
 function gotoSetup(){
+  if(!selectedMode) selectedMode='pvp';
   mode = selectedMode;
   players=[newPlayer('Player 1'), newPlayer('Player 2')];
   setupPlayer=0; placedCount=0; manualRot=0;
@@ -701,10 +694,10 @@ function gotoSetup(){
   showStep('setup');
 }
 
-// 首页 / 规则页 导航
+// 首页 / 规则页（帮助）导航
 $('pvpCard').addEventListener('click', ()=>{ selectedMode='pvp'; gotoRules(); });
 $('pveCard').addEventListener('click', ()=>{ selectedMode='pve'; gotoRules(); });
-$('toRulesBtn').addEventListener('click', ()=>{ gotoRules(); });
+$('helpBtn').addEventListener('click', ()=>{ gotoRules(); });
 $('rulesBackBtn').addEventListener('click', ()=>{ showStep('home'); });
 $('rulesStartBtn').addEventListener('click', ()=>{ gotoSetup(); });
 $('backHomeBtn').addEventListener('click', ()=>{ showStep('home'); });
