@@ -73,9 +73,12 @@
   button:disabled{opacity:.45; cursor:not-allowed;}
   select{padding:8px 10px; border-radius:8px; border:1px solid var(--line); font-size:14px; font-family:inherit;}
   .overlay{
-    position:fixed; inset:0; background:rgba(20,35,55,.82); display:none; align-items:center; justify-content:center; z-index:50;
+    position:fixed; inset:0; background:rgba(20,35,55,.82); display:none; align-items:center; justify-content:center; z-index:1100;
   }
   .overlay.show{display:flex;}
+  .result-banner{position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:1200; padding:14px 30px; border-radius:12px; font-size:20px; font-weight:800; color:#fff; box-shadow:0 10px 34px rgba(0,0,0,.4); pointer-events:none; text-align:center; max-width:90vw;}
+  .result-banner.win{background:linear-gradient(135deg,#1f9d55,#37c871);}
+  .result-banner.lose{background:linear-gradient(135deg,#b83227,#e74c3c);}
   .overlay .box{background:#fff; padding:28px 34px; border-radius:14px; text-align:center; max-width:420px;}
   .overlay h2{margin:0 0 10px;}
   .overlay p{color:var(--muted); margin:6px 0 18px; line-height:1.6;}
@@ -172,6 +175,8 @@
     <button id="ovBtn">我准备好了 ▶</button>
   </div>
 </div>
+
+<div id="resultBanner" class="result-banner hidden"></div>
 
 <script>
 /* ===================== 基础配置 ===================== */
@@ -461,13 +466,18 @@ function onAttack(r,c){
 
 function endGame(winnerIdx){
   gameOver = true;
+  const isWin = (mode==='pve') ? (winnerIdx===0) : true;
   const msg = (mode==='pve')
     ? (winnerIdx===0?'🎉 你赢了！三架敌机全部击落！':'💥 电脑获胜，你的三架飞机被击落。')
     : ('🎉 '+players[winnerIdx].name+' 获胜！三架敌机全部击落！');
   setStatus(msg);
   logSys(msg);
+  // 顶部醒目横幅（独立于 overlay，确保任何环境下都能看到结束提示）
+  const b=$('resultBanner');
+  b.textContent=msg;
+  b.className='result-banner '+(isWin?'win':'lose');
   showOverlay('游戏结束', msg+' 点击“重新开始”可再来一局。', null);
-  $('ovBtn').textContent='好的';
+  $('ovBtn').textContent='重新开始 ↻';
 }
 
 /* ===================== 日志 ===================== */
