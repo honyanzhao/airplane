@@ -59,25 +59,13 @@
         rgba(43,255,158,.06) 62% 63%, transparent 63%),
       var(--scope);
   }
-  /* 雷达扫描（圆形扇形：前沿亮线，向后 30° 渐隐） */
+  /* 雷达扫描（SVG 真实圆弧扇形：前沿亮线，向后 30° 渐隐，外缘为圆弧而非直边） */
   .grid::before{
     content:""; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:50%;
-    background:conic-gradient(from 0deg,
-      rgba(43,255,158,0) 0deg,
-      rgba(43,255,158,.5) 27deg,
-      rgba(43,255,158,.95) 30deg,
-      rgba(43,255,158,0) 30deg,
-      rgba(43,255,158,0) 360deg);
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='182' y1='148' x2='195' y2='100' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%232bff9e' stop-opacity='0.95'/%3E%3Cstop offset='1' stop-color='%232bff9e' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M100,100 L195,100 A95,95 0 0 1 182.3,147.5 Z' fill='url(%23g)'/%3E%3C/svg%3E") center/cover no-repeat;
     animation:sweep 5s linear infinite; mix-blend-mode:screen;
   }
   @keyframes sweep{to{transform:rotate(360deg);}}
-  /* 雷达圆形边界 + 同心环（置于格子之上，明确扫描处在圆形范围内） */
-  .grid::after{
-    content:""; position:absolute; inset:0; z-index:2; pointer-events:none; border-radius:50%;
-    background:
-      repeating-radial-gradient(circle closest-side at 50% 50%, rgba(43,255,158,.12) 0 1px, transparent 1px 30px),
-      radial-gradient(circle closest-side at 50% 50%, transparent 0 92%, rgba(43,255,158,.5) 92% 97%, transparent 97%);
-  }
   .grid > *{z-index:1;}
   /* 己方飞机：战术友军标记（统一雷达绿，机头为指挥节点） */
   .cell.pl-head{background:var(--radar); color:#03110c; font-weight:800; font-size:13px; border:1px solid var(--radar); box-shadow:0 0 10px rgba(43,255,158,.5);}
